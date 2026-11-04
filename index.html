@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Chavez Barbearia</title>
+  <meta name="description" content="Controle de cortes, despesas e lucro da Chavez Barbearia">
+  <meta name="theme-color" content="#111111">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Chavez">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="topo">
+    <h1>✂️ Chavez Barbearia</h1>
+    <div class="seletor-mes">
+      <button id="mes-anterior" type="button" aria-label="Mês anterior">‹</button>
+      <span id="mes-label">—</span>
+      <button id="mes-proximo" type="button" aria-label="Próximo mês">›</button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ===================== RESUMO ===================== -->
+    <section id="tela-resumo" class="tela ativa">
+      <div class="card destaque">
+        <span class="rotulo">Lucro líquido do mês</span>
+        <strong id="res-lucro" class="valor-grande">R$ 0,00</strong>
+        <small>Cortes − Despesas</small>
+      </div>
+
+      <div class="grade-2">
+        <div class="card">
+          <span class="rotulo">Arrecadado (cortes)</span>
+          <strong id="res-bruto" class="valor positivo">R$ 0,00</strong>
+          <small id="res-qtd">0 atendimentos</small>
+        </div>
+        <div class="card">
+          <span class="rotulo">Despesas</span>
+          <strong id="res-despesas" class="valor negativo">R$ 0,00</strong>
+          <small id="res-qtd-desp">0 lançamentos</small>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Por serviço</h2>
+        <ul id="res-servicos" class="lista-simples"></ul>
+      </div>
+
+      <div class="card">
+        <h2>Backup dos dados</h2>
+        <p class="aviso">Seus dados ficam salvos só neste aparelho. Faça backup de vez em quando para não perder nada.</p>
+        <div class="linha-botoes">
+          <button id="btn-exportar" type="button" class="btn secundario">Baixar backup</button>
+          <button id="btn-importar" type="button" class="btn secundario">Restaurar backup</button>
+          <input id="arquivo-importar" type="file" accept="application/json,.json" hidden>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== CORTES ===================== -->
+    <section id="tela-cortes" class="tela">
+      <div class="card destaque verde">
+        <span class="rotulo">Total de cortes no mês</span>
+        <strong id="cortes-total" class="valor-grande">R$ 0,00</strong>
+        <small id="cortes-qtd">0 atendimentos</small>
+      </div>
+
+      <div class="card">
+        <h2>Registrar atendimento</h2>
+        <label class="campo">
+          <span>Data</span>
+          <input type="date" id="corte-data">
+        </label>
+        <div id="botoes-servicos" class="grade-servicos"></div>
+        <p class="aviso">Toque no serviço para registrar na data escolhida.</p>
+      </div>
+
+      <div class="card">
+        <h2>Atendimentos do mês</h2>
+        <ul id="lista-cortes" class="lista"></ul>
+        <p id="vazio-cortes" class="vazio">Nenhum atendimento neste mês.</p>
+      </div>
+    </section>
+
+    <!-- ===================== DESPESAS ===================== -->
+    <section id="tela-despesas" class="tela">
+      <div class="card destaque vermelho">
+        <span class="rotulo">Total de despesas no mês</span>
+        <strong id="desp-total" class="valor-grande">R$ 0,00</strong>
+        <small id="desp-qtd">0 lançamentos</small>
+      </div>
+
+      <div class="card">
+        <h2>Nova despesa</h2>
+        <form id="form-despesa" autocomplete="off">
+          <label class="campo">
+            <span>Descrição</span>
+            <input type="text" id="desp-descricao" placeholder="Ex.: lâmina, luz, aluguel..." maxlength="60" required>
+          </label>
+          <div class="grade-2">
+            <label class="campo">
+              <span>Valor (R$)</span>
+              <input type="number" id="desp-valor" inputmode="decimal" step="0.01" min="0.01" placeholder="0,00" required>
+            </label>
+            <label class="campo">
+              <span>Data</span>
+              <input type="date" id="desp-data" required>
+            </label>
+          </div>
+          <button type="submit" class="btn principal">Adicionar despesa</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Despesas do mês</h2>
+        <ul id="lista-despesas" class="lista"></ul>
+        <p id="vazio-despesas" class="vazio">Nenhuma despesa neste mês.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="menu" aria-label="Navegação">
+    <button type="button" class="aba ativa" data-tela="resumo"><span>📊</span>Resumo</button>
+    <button type="button" class="aba" data-tela="cortes"><span>✂️</span>Cortes</button>
+    <button type="button" class="aba" data-tela="despesas"><span>🧾</span>Despesas</button>
+  </nav>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
