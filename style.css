@@ -213,6 +213,17 @@ input:focus { outline: 2px solid var(--ouro); outline-offset: 1px; }
 .lista .info small { color: var(--suave); }
 .lista .dir { display: flex; align-items: center; gap: 10px; flex-shrink: 0; font-weight: 700; }
 
+.suave { color: var(--suave); font-weight: 600; }
+
+.input-preco {
+  width: 92px !important;
+  padding: 9px 10px !important;
+  text-align: right;
+  font-weight: 700;
+}
+
+.vazio-linha { color: var(--suave); justify-content: center !important; }
+
 .btn-apagar {
   background: transparent;
   border: 1px solid var(--borda);

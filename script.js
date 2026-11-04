@@ -1,11 +1,20 @@
 /* ===== Chavez Barbearia — lógica do app ===== */
 
-// ---------- TABELA DE PREÇOS (edite aqui se mudar os valores) ----------
-const PRECOS = [
-  { id: 'corte',             nome: 'Corte',               preco: 15 },
-  { id: 'pigmentacao',       nome: 'Pigmentação',         preco: 15 },
-  { id: 'corte-pigmentacao', nome: 'Corte e pigmentação', preco: 25 },
-  { id: 'barba-corte',       nome: 'Barba e corte',       preco: 20 },
+// ---------- TABELA DE PREÇOS ORIGINAL (cardápio) ----------
+// Depois de instalado, os preços são alterados dentro do app, na aba "Preços".
+const SERVICOS_PADRAO = [
+  { id: 'corte',                   nome: 'Corte',                       preco: 15 },
+  { id: 'corte-navalhado',         nome: 'Corte navalhado',             preco: 20 },
+  { id: 'corte-tesoura',           nome: 'Corte na tesoura',            preco: 20 },
+  { id: 'barba',                   nome: 'Barba',                       preco: 10 },
+  { id: 'pezinho',                 nome: 'Pezinho',                     preco: 7 },
+  { id: 'sobrancelha',             nome: 'Sobrancelha',                 preco: 7 },
+  { id: 'corte-sobrancelha',       nome: 'Corte + sobrancelha',         preco: 20 },
+  { id: 'corte-barba',             nome: 'Corte + barba',               preco: 25 },
+  { id: 'corte-barba-sobrancelha', nome: 'Corte + barba + sobrancelha', preco: 30 },
+  { id: 'luzes',                   nome: 'Luzes',                       preco: 80 },
+  { id: 'nevou',                   nome: 'Nevou',                       preco: 90 },
+  { id: 'pigmentacao',             nome: 'Pigmentação',                 preco: 30 },
 ];
 
 const CHAVE_STORAGE = 'chavez-barbearia-v1';
@@ -58,14 +67,26 @@ function aviso(texto) {
 }
 
 // ---------- Dados ----------
+function copiaPadrao() {
+  return SERVICOS_PADRAO.map((s) => ({ ...s }));
+}
+
 function dadosVazios() {
-  return { cortes: [], despesas: [] };
+  return { cortes: [], despesas: [], servicos: copiaPadrao() };
 }
 
 function validar(obj) {
   if (!obj || !Array.isArray(obj.cortes) || !Array.isArray(obj.despesas)) return null;
   const dataOk = (d) => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d);
   const valorOk = (v) => typeof v === 'number' && isFinite(v) && v >= 0;
+
+  // dados antigos (sem lista de serviços) ganham a tabela do cardápio
+  const servicos = Array.isArray(obj.servicos)
+    ? obj.servicos
+        .filter((s) => s && typeof s.nome === 'string' && s.nome.trim() && typeof s.preco === 'number' && isFinite(s.preco) && s.preco > 0)
+        .map((s) => ({ id: String(s.id || novoId()), nome: s.nome.trim(), preco: s.preco }))
+    : copiaPadrao();
+
   return {
     cortes: obj.cortes
       .filter((c) => dataOk(c.data) && valorOk(c.valor) && typeof c.servico === 'string')
@@ -73,6 +94,7 @@ function validar(obj) {
     despesas: obj.despesas
       .filter((d) => dataOk(d.data) && valorOk(d.valor) && typeof d.descricao === 'string')
       .map((d) => ({ id: String(d.id || novoId()), data: d.data, descricao: d.descricao, valor: d.valor })),
+    servicos,
   };
 }
 
@@ -132,6 +154,68 @@ function ordenar(lista) {
   return [...lista].sort((a, b) => (a.data === b.data ? (a.id < b.id ? 1 : -1) : a.data < b.data ? 1 : -1));
 }
 
+// Botões da página Cortes + lista editável da página Preços
+function renderServicos() {
+  // botões de registrar atendimento
+  const caixa = $('botoes-servicos');
+  caixa.replaceChildren(
+    ...dados.servicos.map((p) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn-servico';
+      const n = document.createElement('span');
+      n.className = 'nome';
+      n.textContent = p.nome;
+      const v = document.createElement('span');
+      v.className = 'preco';
+      v.textContent = brl(p.preco);
+      b.append(n, v);
+      b.addEventListener('click', () => registrarCorte(p));
+      return b;
+    })
+  );
+
+  // lista de preços editáveis
+  const lista = $('lista-precos');
+  lista.replaceChildren(
+    ...dados.servicos.map((p) => {
+      const li = document.createElement('li');
+
+      const info = document.createElement('div');
+      info.className = 'info';
+      const nome = document.createElement('strong');
+      nome.textContent = p.nome;
+      info.append(nome);
+
+      const dir = document.createElement('div');
+      dir.className = 'dir';
+      const rs = document.createElement('span');
+      rs.className = 'suave';
+      rs.textContent = 'R$';
+      const inp = document.createElement('input');
+      inp.type = 'number';
+      inp.className = 'input-preco';
+      inp.step = '0.01';
+      inp.min = '0.01';
+      inp.setAttribute('inputmode', 'decimal');
+      inp.setAttribute('aria-label', `Preço de ${p.nome}`);
+      inp.value = String(p.preco);
+      inp.addEventListener('change', () => alterarPreco(p.id, inp.value));
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn-apagar';
+      b.setAttribute('aria-label', `Remover ${p.nome}`);
+      b.textContent = '✕';
+      b.addEventListener('click', () => removerServico(p.id));
+      dir.append(rs, inp, b);
+
+      li.append(info, dir);
+      return li;
+    })
+  );
+  $('vazio-precos').hidden = dados.servicos.length > 0;
+}
+
 function render() {
   $('mes-label').textContent = nomeDoMes(mesAtual);
 
@@ -151,35 +235,48 @@ function render() {
   $('res-despesas').textContent = brl(totalDesp);
   $('res-qtd-desp').textContent = plural(despesas.length, 'lançamento', 'lançamentos');
 
-  // Por serviço
-  const grupos = new Map(PRECOS.map((p) => [p.nome, { qtd: 0, total: [] }]));
+  // Por serviço (só os que tiveram atendimento no mês)
+  const grupos = new Map();
   cortes.forEach((c) => {
-    if (!grupos.has(c.servico)) grupos.set(c.servico, { qtd: 0, total: [] });
-    const g = grupos.get(c.servico);
-    g.qtd += 1;
-    g.total.push(c);
+    if (!grupos.has(c.servico)) grupos.set(c.servico, []);
+    grupos.get(c.servico).push(c);
   });
+  const ordem = dados.servicos.map((s) => s.nome);
+  const posicao = (nome) => {
+    const i = ordem.indexOf(nome);
+    return i === -1 ? ordem.length : i;
+  };
+  const nomes = [...grupos.keys()].sort((a, b) => posicao(a) - posicao(b));
+
   const ul = $('res-servicos');
-  ul.replaceChildren();
-  grupos.forEach((g, nome) => {
+  if (nomes.length === 0) {
     const li = document.createElement('li');
-    const esq = document.createElement('span');
-    esq.textContent = nome + ' ';
-    const q = document.createElement('span');
-    q.className = 'qtd';
-    q.textContent = `× ${g.qtd}`;
-    esq.append(q);
-    const dir = document.createElement('strong');
-    dir.textContent = brl(soma(g.total));
-    li.append(esq, dir);
-    ul.append(li);
-  });
+    li.className = 'vazio-linha';
+    li.textContent = 'Nenhum atendimento neste mês.';
+    ul.replaceChildren(li);
+  } else {
+    ul.replaceChildren(
+      ...nomes.map((nome) => {
+        const itens = grupos.get(nome);
+        const li = document.createElement('li');
+        const esq = document.createElement('span');
+        esq.textContent = nome + ' ';
+        const q = document.createElement('span');
+        q.className = 'qtd';
+        q.textContent = `× ${itens.length}`;
+        esq.append(q);
+        const dir = document.createElement('strong');
+        dir.textContent = brl(soma(itens));
+        li.append(esq, dir);
+        return li;
+      })
+    );
+  }
 
   // Página de cortes
   $('cortes-total').textContent = brl(totalCortes);
   $('cortes-qtd').textContent = plural(cortes.length, 'atendimento', 'atendimentos');
-  const listaCortes = $('lista-cortes');
-  listaCortes.replaceChildren(
+  $('lista-cortes').replaceChildren(
     ...cortes.map((c) => criaItem(c.servico, dataCurta(c.data), c.valor, 'positivo', () => apagarCorte(c.id)))
   );
   $('vazio-cortes').hidden = cortes.length > 0;
@@ -187,8 +284,7 @@ function render() {
   // Página de despesas
   $('desp-total').textContent = brl(totalDesp);
   $('desp-qtd').textContent = plural(despesas.length, 'lançamento', 'lançamentos');
-  const listaDesp = $('lista-despesas');
-  listaDesp.replaceChildren(
+  $('lista-despesas').replaceChildren(
     ...despesas.map((d) => criaItem(d.descricao, dataCurta(d.data), d.valor, 'negativo', () => apagarDespesa(d.id)))
   );
   $('vazio-despesas').hidden = despesas.length > 0;
@@ -251,6 +347,62 @@ function adicionarDespesa(ev) {
   aviso('Despesa adicionada');
 }
 
+// ----- Preços e serviços -----
+function alterarPreco(id, texto) {
+  const servico = dados.servicos.find((s) => s.id === id);
+  if (!servico) return;
+  const novo = Math.round(parseFloat(texto) * 100) / 100;
+  if (!isFinite(novo) || novo <= 0) {
+    aviso('Preço inválido');
+    renderServicos();
+    return;
+  }
+  servico.preco = novo;
+  salvar();
+  renderServicos();
+  aviso(`${servico.nome}: ${brl(novo)}`);
+}
+
+function removerServico(id) {
+  const servico = dados.servicos.find((s) => s.id === id);
+  if (!servico) return;
+  if (!confirm(`Remover "${servico.nome}" da tabela?\n\nOs atendimentos já registrados continuam salvos.`)) return;
+  dados.servicos = dados.servicos.filter((s) => s.id !== id);
+  salvar();
+  renderServicos();
+  render();
+  aviso('Serviço removido');
+}
+
+function adicionarServico(ev) {
+  ev.preventDefault();
+  const nome = $('serv-nome').value.trim();
+  const preco = Math.round(parseFloat($('serv-preco').value) * 100) / 100;
+  if (!nome || !isFinite(preco) || preco <= 0) {
+    aviso('Preencha nome e preço');
+    return;
+  }
+  if (dados.servicos.some((s) => s.nome.toLowerCase() === nome.toLowerCase())) {
+    aviso('Esse serviço já existe');
+    return;
+  }
+  dados.servicos.push({ id: novoId(), nome, preco });
+  salvar();
+  ev.target.reset();
+  renderServicos();
+  render();
+  aviso(`${nome} adicionado`);
+}
+
+function restaurarPrecos() {
+  if (!confirm('Voltar para a tabela original do cardápio?\n\nSeus atendimentos e despesas não serão apagados.')) return;
+  dados.servicos = copiaPadrao();
+  salvar();
+  renderServicos();
+  render();
+  aviso('Tabela original restaurada');
+}
+
 // ---------- Backup ----------
 function exportar() {
   const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
@@ -276,6 +428,7 @@ function importar(arquivo) {
       if (!confirm(msg)) return;
       dados = novo;
       salvar();
+      renderServicos();
       render();
       aviso('Backup restaurado');
     } catch (e) {
@@ -287,23 +440,6 @@ function importar(arquivo) {
 
 // ---------- Inicialização ----------
 function iniciar() {
-  // botões de serviço
-  const caixa = $('botoes-servicos');
-  PRECOS.forEach((p) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'btn-servico';
-    const n = document.createElement('span');
-    n.className = 'nome';
-    n.textContent = p.nome;
-    const v = document.createElement('span');
-    v.className = 'preco';
-    v.textContent = brl(p.preco);
-    b.append(n, v);
-    b.addEventListener('click', () => registrarCorte(p));
-    caixa.append(b);
-  });
-
   // datas padrão
   $('corte-data').value = hoje();
   $('desp-data').value = hoje();
@@ -321,8 +457,10 @@ function iniciar() {
   $('mes-anterior').addEventListener('click', () => mudarMes(-1));
   $('mes-proximo').addEventListener('click', () => mudarMes(1));
 
-  // formulário e backup
+  // formulários e botões
   $('form-despesa').addEventListener('submit', adicionarDespesa);
+  $('form-servico').addEventListener('submit', adicionarServico);
+  $('btn-restaurar-precos').addEventListener('click', restaurarPrecos);
   $('btn-exportar').addEventListener('click', exportar);
   $('btn-importar').addEventListener('click', () => $('arquivo-importar').click());
   $('arquivo-importar').addEventListener('change', (e) => {
@@ -330,6 +468,7 @@ function iniciar() {
     e.target.value = '';
   });
 
+  renderServicos();
   render();
 
   // pede ao navegador para não apagar os dados salvos

@@ -80,7 +80,7 @@
           <input type="date" id="corte-data">
         </label>
         <div id="botoes-servicos" class="grade-servicos"></div>
-        <p class="aviso">Toque no serviço para registrar na data escolhida.</p>
+        <p class="aviso">Toque no serviço para registrar na data escolhida. Para mudar valores ou incluir serviços, use a aba Preços.</p>
       </div>
 
       <div class="card">
@@ -126,12 +126,44 @@
       </div>
     </section>
 
+    <!-- ===================== PREÇOS ===================== -->
+    <section id="tela-precos" class="tela">
+      <div class="card">
+        <h2>Tabela de preços</h2>
+        <p class="aviso">Altere o valor e toque fora do campo para salvar. O novo preço vale para os próximos atendimentos; os já registrados não mudam.</p>
+        <ul id="lista-precos" class="lista"></ul>
+        <p id="vazio-precos" class="vazio">Nenhum serviço cadastrado.</p>
+      </div>
+
+      <div class="card">
+        <h2>Novo serviço</h2>
+        <form id="form-servico" autocomplete="off">
+          <label class="campo">
+            <span>Nome</span>
+            <input type="text" id="serv-nome" placeholder="Ex.: Hidratação" maxlength="40" required>
+          </label>
+          <label class="campo">
+            <span>Preço (R$)</span>
+            <input type="number" id="serv-preco" inputmode="decimal" step="0.01" min="0.01" placeholder="0,00" required>
+          </label>
+          <button type="submit" class="btn principal">Adicionar serviço</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Tabela original</h2>
+        <p class="aviso">Volta os serviços e preços do cardápio. Seus atendimentos e despesas não são apagados.</p>
+        <button id="btn-restaurar-precos" type="button" class="btn secundario">Restaurar tabela original</button>
+      </div>
+    </section>
+
   </main>
 
   <nav class="menu" aria-label="Navegação">
     <button type="button" class="aba ativa" data-tela="resumo"><span>📊</span>Resumo</button>
     <button type="button" class="aba" data-tela="cortes"><span>✂️</span>Cortes</button>
     <button type="button" class="aba" data-tela="despesas"><span>🧾</span>Despesas</button>
+    <button type="button" class="aba" data-tela="precos"><span>💲</span>Preços</button>
   </nav>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>

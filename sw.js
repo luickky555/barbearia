@@ -1,7 +1,7 @@
 /* Service worker — permite abrir o app sem internet.
    Se algum dia você alterar os arquivos do site, troque o número da versão abaixo
-   (ex.: chavez-v2) para o celular baixar a versão nova. */
-const VERSAO = 'chavez-v1';
+   (ex.: chavez-v3) para o celular baixar a versão nova. */
+const VERSAO = 'chavez-v2';
 const ARQUIVOS = [
   './',
   'index.html',
